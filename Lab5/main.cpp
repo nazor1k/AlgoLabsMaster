@@ -9,45 +9,47 @@
 
 using namespace std;
 
-void bubbleSort(int arr[], int n, long long& comparisons, long long& swaps) {
-    comparisons = 0;
-    swaps = 0;
+#define MAX_SIZE 10001
+
+void bubbleSort(int arr[], int n, long long& checks, long long& changes) {
+    checks = 0;
+    changes = 0;
     for (int i = 0; i < n - 1; i++) {
-        bool swapped = false;
+        bool isChanged = false;
         for (int j = 0; j < n - i - 1; j++) {
-            comparisons++;
+            checks++;
             if (arr[j] > arr[j + 1]) {
-                int tmp = arr[j];
+                int temp = arr[j];
                 arr[j] = arr[j + 1];
-                arr[j + 1] = tmp;
-                swaps++;
-                swapped = true;
+                arr[j + 1] = temp;
+                changes++;
+                isChanged = true;
             }
         }
-        if (!swapped) break;
+        if (!isChanged) break;
     }
 }
 
-void insertionSort(int arr[], int n, long long& comparisons, long long& shifts) {
-    comparisons = 0;
-    shifts = 0;
+void insertionSort(int arr[], int n, long long& checks, long long& moves) {
+    checks = 0;
+    moves = 0;
     for (int i = 1; i < n; i++) {
-        int key = arr[i];
+        int element = arr[i];
         int j = i - 1;
         while (j >= 0) {
-            comparisons++;
-            if (arr[j] > key) {
+            checks++;
+            if (arr[j] > element) {
                 arr[j + 1] = arr[j];
-                shifts++;
+                moves++;
                 j--;
             }
             else break;
         }
-        arr[j + 1] = key;
+        arr[j + 1] = element;
     }
 }
 
-void fillRandom(int arr[], int n) {
+void generateArray(int arr[], int n) {
     for (int i = 0; i < n; i++)
         arr[i] = rand() % 100000;
 }
@@ -57,12 +59,15 @@ void copyArray(int src[], int dst[], int n) {
         dst[i] = src[i];
 }
 
+int original[MAX_SIZE];
+int arr[MAX_SIZE];
+
 int main() {
     SetConsoleOutputCP(1251);
     SetConsoleCP(1251);
     srand((unsigned)time(0));
 
-    int sizes[] = { 100, 1000, 10000 };
+    int rozmiry[] = { 100, 1000, 10000 };
 
     cout << "Лабораторна №5. Порівняння сортувань\n";
     cout << "===========================================\n";
@@ -70,33 +75,28 @@ int main() {
     cout << "-------------------------------------------\n";
 
     for (int s = 0; s < 3; s++) {
-        int n = sizes[s];
-        int* original = new int[n];
-        int* arr = new int[n];
-        fillRandom(original, n);
+        int n = rozmiry[s];
+        generateArray(original, n);
 
-        long long cmp, swp;
+        long long checks, changes;
 
         // Бульбашка
         copyArray(original, arr, n);
         auto t1 = chrono::high_resolution_clock::now();
-        bubbleSort(arr, n, cmp, swp);
+        bubbleSort(arr, n, checks, changes);
         auto t2 = chrono::high_resolution_clock::now();
         double ms1 = chrono::duration<double, milli>(t2 - t1).count();
-        cout << n << "\tБульбашка\t" << cmp << "\t" << swp << "\t" << ms1 << "\n";
+        cout << n << "\tБульбашка\t" << checks << "\t" << changes << "\t" << ms1 << "\n";
 
         // Вставка
         copyArray(original, arr, n);
         auto t3 = chrono::high_resolution_clock::now();
-        insertionSort(arr, n, cmp, swp);
+        insertionSort(arr, n, checks, changes);
         auto t4 = chrono::high_resolution_clock::now();
         double ms2 = chrono::duration<double, milli>(t4 - t3).count();
-        cout << "\tВставка\t\t" << cmp << "\t" << swp << "\t" << ms2 << "\n";
+        cout << "\tВставка\t\t" << checks << "\t" << changes << "\t" << ms2 << "\n";
 
         cout << "-------------------------------------------\n";
-
-        delete[] original;
-        delete[] arr;
     }
 
     return 0;

@@ -9,77 +9,87 @@
 
 using namespace std;
 
-// Сортування підрахунком (тільки для невід'ємних чисел до maxVal)
+#define MAX_SIZE 10001
+#define MAX_VAL  9999
+#define KOSHY    10
+
+// Сортування підрахунком (для невід'ємних чисел до maxVal)
 void countingSort(int arr[], int n, int maxVal) {
-    int* count = new int[maxVal + 1]();
+    int* countArr = new int[maxVal + 1]();
     for (int i = 0; i < n; i++)
-        count[arr[i]]++;
-    int idx = 0;
-    for (int v = 0; v <= maxVal; v++)
-        while (count[v]-- > 0)
-            arr[idx++] = v;
-    delete[] count;
+        countArr[arr[i]]++;
+    int index = 0;
+    for (int v = 0; v <= maxVal; v++) {
+        while (countArr[v] > 0) {
+            arr[index] = v;
+            index++;
+            countArr[v]--;
+        }
+    }
+    delete[] countArr;
 }
 
-// Сортування вставкою для кошика (допоміжна)
+// Сортування вставкою для одного кошика (допоміжна)
 void insertionSortRange(int arr[], int left, int right) {
     for (int i = left + 1; i <= right; i++) {
-        int key = arr[i];
+        int element = arr[i];
         int j = i - 1;
-        while (j >= left && arr[j] > key) {
+        while (j >= left && arr[j] > element) {
             arr[j + 1] = arr[j];
             j--;
         }
-        arr[j + 1] = key;
+        arr[j + 1] = element;
     }
 }
 
 // Блокове сортування
 void bucketSort(int arr[], int n, int maxVal, int bucketCount) {
-    // Визначаємо межі кошиків
     int bucketSize = maxVal / bucketCount + 1;
-    // Масиви для підрахунку та індексів
+
     int* bucketStart = new int[bucketCount]();
     int* bucketLen = new int[bucketCount]();
+    int* temp     = new int[n];
+    int* index = new int[bucketCount]();
 
+    // Рахуємо кількість елементів у кожному кошику
     for (int i = 0; i < n; i++) {
-        int b = arr[i] / bucketSize;
-        if (b >= bucketCount) b = bucketCount - 1;
-        bucketLen[b]++;
+        int k = arr[i] / bucketSize;
+        if (k >= bucketCount) k = bucketCount - 1;
+        bucketLen[k]++;
     }
 
+    // Визначаємо початкові позиції кошиків
     bucketStart[0] = 0;
     for (int i = 1; i < bucketCount; i++)
         bucketStart[i] = bucketStart[i - 1] + bucketLen[i - 1];
 
-    // Розкладаємо по кошиках
-    int* temp = new int[n];
-    int* pos = new int[bucketCount]();
+    // Розкладаємо елементи по кошиках у temp
     for (int i = 0; i < n; i++) {
-        int b = arr[i] / bucketSize;
-        if (b >= bucketCount) b = bucketCount - 1;
-        temp[bucketStart[b] + pos[b]] = arr[i];
-        pos[b]++;
+        int k = arr[i] / bucketSize;
+        if (k >= bucketCount) k = bucketCount - 1;
+        temp[bucketStart[k] + index[k]] = arr[i];
+        index[k]++;
     }
 
-    // Сортуємо кожен кошик
-    for (int b = 0; b < bucketCount; b++) {
-        if (bucketLen[b] > 1)
-            insertionSortRange(temp, bucketStart[b], bucketStart[b] + bucketLen[b] - 1);
+    // Сортуємо кожен кошик вставкою
+    for (int k = 0; k < bucketCount; k++) {
+        if (bucketLen[k] > 1)
+            insertionSortRange(temp, bucketStart[k], bucketStart[k] + bucketLen[k] - 1);
     }
 
+    // Копіюємо назад
     for (int i = 0; i < n; i++)
         arr[i] = temp[i];
 
     delete[] bucketStart;
     delete[] bucketLen;
     delete[] temp;
-    delete[] pos;
+    delete[] index;
 }
 
-void fillRandom(int arr[], int n, int maxVal) {
+void generateArray(int arr[], int n) {
     for (int i = 0; i < n; i++)
-        arr[i] = rand() % (maxVal + 1);
+        arr[i] = rand() % (MAX_VAL + 1);
 }
 
 void copyArray(int src[], int dst[], int n) {
@@ -87,14 +97,15 @@ void copyArray(int src[], int dst[], int n) {
         dst[i] = src[i];
 }
 
+int original[MAX_SIZE];
+int arr[MAX_SIZE];
+
 int main() {
     SetConsoleOutputCP(1251);
     SetConsoleCP(1251);
     srand((unsigned)time(0));
 
-    int sizes[] = { 100, 1000, 10000 };
-    int MAX_VAL = 9999;
-    int BUCKETS = 10;
+    int rozmiry[] = { 100, 1000, 10000 };
 
     cout << "Лабораторна №7. Сортування підрахунком vs Блокове сортування\n";
     cout << "===========================================\n";
@@ -102,10 +113,8 @@ int main() {
     cout << "-------------------------------------------\n";
 
     for (int s = 0; s < 3; s++) {
-        int n = sizes[s];
-        int* original = new int[n];
-        int* arr = new int[n];
-        fillRandom(original, n, MAX_VAL);
+        int n = rozmiry[s];
+        generateArray(original, n);
 
         // Сортування підрахунком
         copyArray(original, arr, n);
@@ -118,15 +127,12 @@ int main() {
         // Блокове сортування
         copyArray(original, arr, n);
         auto t3 = chrono::high_resolution_clock::now();
-        bucketSort(arr, n, MAX_VAL, BUCKETS);
+        bucketSort(arr, n, MAX_VAL, KOSHY);
         auto t4 = chrono::high_resolution_clock::now();
         double ms2 = chrono::duration<double, milli>(t4 - t3).count();
         cout << "\tБлокове\t\t\t" << ms2 << "\n";
 
         cout << "-------------------------------------------\n";
-
-        delete[] original;
-        delete[] arr;
     }
 
     return 0;
