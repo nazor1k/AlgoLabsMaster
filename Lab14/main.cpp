@@ -6,6 +6,23 @@
 
 using namespace std;
 
+void quickSort(vector<int>& arr, int left, int right) {
+    if (left >= right) return;
+    int i = left, j = right;
+    int pivot = arr[left + (right - left) / 2];
+    while (i <= j) {
+        while (arr[i] < pivot) i++;
+        while (arr[j] > pivot) j--;
+        if (i <= j) {
+            swap(arr[i], arr[j]);
+            i++;
+            j--;
+        }
+    }
+    quickSort(arr, left, j);
+    quickSort(arr, i, right);
+}
+
 int linearSearch(const vector<int>& arr, int target, long long& comparisons) {
     comparisons = 0;
     for (size_t i = 0; i < arr.size(); i++) {
@@ -38,7 +55,6 @@ void printTable(const vector<int>& sizes, bool itemExists) {
     for (int n : sizes) {
         vector<int> arr(n);
         for (int i = 0; i < n; i++) arr[i] = rand() % 1000000;
-        
         int target = itemExists ? arr[n / 2] : -1;
         long long cmp;
 
@@ -49,7 +65,7 @@ void printTable(const vector<int>& sizes, bool itemExists) {
         cout << n << "\tLinear\t\t" << cmp << "\t\t0.00 + " << tLin << " = " << tLin << "\n";
 
         auto s_sort = chrono::high_resolution_clock::now();
-        sort(arr.begin(), arr.end());
+        quickSort(arr, 0, n - 1);
         auto e_sort = chrono::high_resolution_clock::now();
         double tSort = chrono::duration<double, milli>(e_sort - s_sort).count();
 
@@ -66,9 +82,7 @@ void printTable(const vector<int>& sizes, bool itemExists) {
 int main() {
     srand(time(0));
     vector<int> sizes = { 100, 1000, 10000, 100000 };
-
     printTable(sizes, true);
     printTable(sizes, false);
-
     return 0;
 }
