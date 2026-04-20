@@ -1,12 +1,6 @@
-// Lab8/main.cpp
-// Лабораторна робота №8. Односпрямований і двоспрямований зв'язні списки.
-
 #include <iostream>
-#include <windows.h>
 
 using namespace std;
-
-// ====== Односпрямований список ======
 
 struct SNode {
     int data;
@@ -66,8 +60,6 @@ struct SinglyList {
         }
     }
 };
-
-// ====== Двоспрямований список ======
 
 struct DNode {
     int data;
@@ -135,34 +127,49 @@ struct DoublyList {
 };
 
 int main() {
-    SetConsoleOutputCP(1251);
-    SetConsoleCP(1251);
+    cout << "Lab 8. Linked Lists (Singly & Doubly)\n\n";
 
-    cout << "=== Односпрямований список ===\n";
+    for (int i = 0; i < 60; i++) cout << "-";
+    cout << "\n| Singly Linked List\n";
+    for (int i = 0; i < 60; i++) cout << "-";
+    cout << "\n";
+    
     SinglyList sl;
     sl.pushBack(10);
     sl.pushBack(20);
     sl.pushBack(30);
     sl.pushFront(5);
-    cout << "Після pushBack(10,20,30), pushFront(5):\n";
+    cout << "After pushBack(10, 20, 30), pushFront(5):\n";
     sl.print();
+    
     sl.remove(20);
-    cout << "Після видалення 20:\n";
+    cout << "After removing 20:\n";
     sl.print();
 
-    cout << "\n=== Двоспрямований список ===\n";
+    cout << "\n";
+    for (int i = 0; i < 60; i++) cout << "-";
+    cout << "\n| Doubly Linked List\n";
+    for (int i = 0; i < 60; i++) cout << "-";
+    cout << "\n";
+    
     DoublyList dl;
     dl.pushBack(10);
     dl.pushBack(20);
     dl.pushBack(30);
     dl.pushFront(5);
-    cout << "Прямий обхід:\n";
+    cout << "Forward traversal:\n";
     dl.printForward();
-    cout << "Зворотній обхід:\n";
+    
+    cout << "Backward traversal:\n";
     dl.printBackward();
+    
     dl.remove(20);
-    cout << "Після видалення 20:\n";
+    cout << "After removing 20:\n";
     dl.printForward();
+    
+    cout << "\n";
+    for (int i = 0; i < 60; i++) cout << "-";
+    cout << "\n";
 
     return 0;
 }
