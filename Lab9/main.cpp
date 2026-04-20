@@ -1,53 +1,56 @@
 #include <iostream>
 #include <chrono>
-#include <vector>
 
 using namespace std;
 
 struct ArrayStack {
-    vector<int> data;
+    static const int MAX_SIZE = 100000;
+    int data[MAX_SIZE];
+    int topIndex;
 
-    bool isEmpty() { return data.empty(); }
+    ArrayStack() : topIndex(-1) {}
+
+    bool isEmpty() { return topIndex == -1; }
 
     void push(int val) {
-        data.push_back(val);
+        if (topIndex < MAX_SIZE - 1) {
+            data[++topIndex] = val;
+        }
     }
 
     int pop() {
         if (isEmpty()) return -1;
-        int val = data.back();
-        data.pop_back();
-        return val;
+        return data[topIndex--];
     }
 
     int peek() {
         if (isEmpty()) return -1;
-        return data.back();
+        return data[topIndex];
     }
 };
 
-struct SNode {
+struct Node {
     int data;
-    SNode* next;
+    Node* next;
 };
 
-struct LinkedStack {
-    SNode* topNode;
-    LinkedStack() : topNode(nullptr) {}
+struct LinkedListStack {
+    Node* topNode;
+    LinkedListStack() : topNode(nullptr) {}
 
     bool isEmpty() { return topNode == nullptr; }
 
     void push(int val) {
-        SNode* node = new SNode{ val, topNode };
-        topNode = node;
+        Node* newNode = new Node{ val, topNode };
+        topNode = newNode;
     }
 
     int pop() {
         if (isEmpty()) return -1;
         int val = topNode->data;
-        SNode* tmp = topNode;
+        Node* temp = topNode;
         topNode = topNode->next;
-        delete tmp;
+        delete temp;
         return val;
     }
 
@@ -56,7 +59,7 @@ struct LinkedStack {
         return topNode->data;
     }
 
-    ~LinkedStack() {
+    ~LinkedListStack() {
         while (!isEmpty()) pop();
     }
 };
@@ -64,47 +67,35 @@ struct LinkedStack {
 int main() {
     int N = 50000;
 
-    cout << "=== Stack on Vector ===\n";
-    {
-        ArrayStack s;
-        s.push(10); s.push(20); s.push(30);
-        cout << "peek: " << s.peek() << "\n";
-        cout << "pop: " << s.pop() << "\n";
-        cout << "pop: " << s.pop() << "\n";
-        cout << "isEmpty: " << (s.isEmpty() ? "Yes" : "No") << "\n";
-    }
+    cout << "=== Array Stack ===\n";
+    ArrayStack as;
+    as.push(10); as.push(20); as.push(30);
+    cout << "peek: " << as.peek() << "\n";
+    cout << "pop: " << as.pop() << "\n";
+    cout << "pop: " << as.pop() << "\n";
+    cout << "isEmpty: " << (as.isEmpty() ? "Yes" : "No") << "\n";
 
-    cout << "\n=== Stack on Linked List ===\n";
-    {
-        LinkedStack s;
-        s.push(10); s.push(20); s.push(30);
-        cout << "peek: " << s.peek() << "\n";
-        cout << "pop: " << s.pop() << "\n";
-        cout << "pop: " << s.pop() << "\n";
-        cout << "isEmpty: " << (s.isEmpty() ? "Yes" : "No") << "\n";
-    }
+    cout << "\n=== Linked List Stack ===\n";
+    LinkedListStack ls;
+    ls.push(10); ls.push(20); ls.push(30);
+    cout << "peek: " << ls.peek() << "\n";
+    cout << "pop: " << ls.pop() << "\n";
+    cout << "pop: " << ls.pop() << "\n";
+    cout << "isEmpty: " << (ls.isEmpty() ? "Yes" : "No") << "\n";
 
-    cout << "\n=== Performance (N=" << N << ") ===\n";
+    cout << "\n=== Performance Comparison (N=" << N << ") ===\n";
 
-    {
-        ArrayStack s;
-        auto t1 = chrono::high_resolution_clock::now();
-        for (int i = 0; i < N; i++) s.push(i);
-        for (int i = 0; i < N; i++) s.pop();
-        auto t2 = chrono::high_resolution_clock::now();
-        double ms = chrono::duration<double, milli>(t2 - t1).count();
-        cout << "Vector:\t\t" << ms << " ms\n";
-    }
+    auto t1 = chrono::high_resolution_clock::now();
+    for (int i = 0; i < N; i++) as.push(i);
+    for (int i = 0; i < N; i++) as.pop();
+    auto t2 = chrono::high_resolution_clock::now();
+    cout << "Array Stack:  " << chrono::duration<double, milli>(t2 - t1).count() << " ms\n";
 
-    {
-        LinkedStack s;
-        auto t1 = chrono::high_resolution_clock::now();
-        for (int i = 0; i < N; i++) s.push(i);
-        for (int i = 0; i < N; i++) s.pop();
-        auto t2 = chrono::high_resolution_clock::now();
-        double ms = chrono::duration<double, milli>(t2 - t1).count();
-        cout << "Linked List:\t" << ms << " ms\n";
-    }
+    auto t3 = chrono::high_resolution_clock::now();
+    for (int i = 0; i < N; i++) ls.push(i);
+    for (int i = 0; i < N; i++) ls.pop();
+    auto t4 = chrono::high_resolution_clock::now();
+    cout << "Linked Stack: " << chrono::duration<double, milli>(t4 - t3).count() << " ms\n";
 
     return 0;
 }
