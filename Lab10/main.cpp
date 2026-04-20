@@ -1,20 +1,14 @@
-// Lab10/main.cpp
-// Лабораторна робота №10. Черга: реалізація на масиві та зв'язному списку.
-
 #include <iostream>
 #include <chrono>
-#include <windows.h>
 
 using namespace std;
 
-// ====== Черга на масиві (циклічний буфер) ======
-
-#define MAX_SIZE 100000
-
-struct ArrayQueue {
+struct Queue {
+    static const int MAX_SIZE = 100000;
     int data[MAX_SIZE];
-    int front, back, count;
-    ArrayQueue() : front(0), back(0), count(0) {}
+    int count;
+
+    Queue() : count(0) {}
 
     bool isEmpty() { return count == 0; }
     bool isFull()  { return count == MAX_SIZE; }
@@ -22,123 +16,102 @@ struct ArrayQueue {
 
     void enqueue(int val) {
         if (!isFull()) {
-            data[back] = val;
-            back = (back + 1) % MAX_SIZE;
+            for (int i = count; i > 0; i--) {
+                data[i] = data[i - 1];
+            }
+            data[0] = val;
             count++;
         }
     }
 
     int dequeue() {
-        if (!isEmpty()) {
-            int val = data[front];
-            front = (front + 1) % MAX_SIZE;
-            count--;
-            return val;
-        }
-        return -1;
+        if (isEmpty()) return -1;
+        return data[--count];
     }
 
     int peek() {
-        if (!isEmpty()) return data[front];
-        return -1;
+        if (isEmpty()) return -1;
+        return data[count - 1];
     }
 };
 
-// ====== Черга на зв'язному списку ======
-
-struct QNode {
+struct Node {
     int data;
-    QNode* next;
+    Node* next;
 };
 
-struct LinkedQueue {
-    QNode* front;
-    QNode* back;
+struct LinkedListQueue {
+    Node* head;
+    Node* tail;
     int count;
-    LinkedQueue() : front(nullptr), back(nullptr), count(0) {}
+
+    LinkedListQueue() : head(nullptr), tail(nullptr), count(0) {}
 
     bool isEmpty() { return count == 0; }
     int  size()    { return count; }
 
     void enqueue(int val) {
-        QNode* node = new QNode{ val, nullptr };
-        if (!back) { front = back = node; }
-        else { back->next = node; back = node; }
+        Node* newNode = new Node{ val, nullptr };
+        if (isEmpty()) {
+            head = tail = newNode;
+        } else {
+            tail->next = newNode;
+            tail = newNode;
+        }
         count++;
     }
 
     int dequeue() {
-        if (!isEmpty()) {
-            int val = front->data;
-            QNode* tmp = front;
-            front = front->next;
-            if (!front) back = nullptr;
-            delete tmp;
-            count--;
-            return val;
-        }
-        return -1;
+        if (isEmpty()) return -1;
+        int val = head->data;
+        Node* temp = head;
+        head = head->next;
+        if (!head) tail = nullptr;
+        delete temp;
+        count--;
+        return val;
     }
 
     int peek() {
-        if (!isEmpty()) return front->data;
-        return -1;
+        if (isEmpty()) return -1;
+        return head->data;
     }
 
-    ~LinkedQueue() {
+    ~LinkedListQueue() {
         while (!isEmpty()) dequeue();
     }
 };
 
 int main() {
-    SetConsoleOutputCP(1251);
-    SetConsoleCP(1251);
+    int N = 10000;
 
-    int N = 50000;
+    cout << "=== Array Queue ===\n";
+    Queue q;
+    q.enqueue(10); q.enqueue(20); q.enqueue(30);
+    cout << "peek: " << q.peek() << "\n";
+    cout << "dequeue: " << q.dequeue() << "\n";
+    cout << "size: " << q.size() << "\n";
 
-    cout << "=== Черга на масиві ===\n";
-    {
-        ArrayQueue q;
-        q.enqueue(10); q.enqueue(20); q.enqueue(30);
-        cout << "peek: " << q.peek() << "\n";
-        cout << "dequeue: " << q.dequeue() << "\n";
-        cout << "dequeue: " << q.dequeue() << "\n";
-        cout << "size: " << q.size() << "\n";
-        cout << "isEmpty: " << (q.isEmpty() ? "так" : "ні") << "\n";
-    }
+    cout << "\n=== LinkedList Queue ===\n";
+    LinkedListQueue lq;
+    lq.enqueue(10); lq.enqueue(20); lq.enqueue(30);
+    cout << "peek: " << lq.peek() << "\n";
+    cout << "dequeue: " << lq.dequeue() << "\n";
+    cout << "size: " << lq.size() << "\n";
 
-    cout << "\n=== Черга на зв'язному списку ===\n";
-    {
-        LinkedQueue q;
-        q.enqueue(10); q.enqueue(20); q.enqueue(30);
-        cout << "peek: " << q.peek() << "\n";
-        cout << "dequeue: " << q.dequeue() << "\n";
-        cout << "dequeue: " << q.dequeue() << "\n";
-        cout << "size: " << q.size() << "\n";
-        cout << "isEmpty: " << (q.isEmpty() ? "так" : "ні") << "\n";
-    }
+    cout << "\n=== Performance Comparison (N=" << N << ") ===\n";
 
-    cout << "\n=== Порівняння продуктивності (N=" << N << " операцій) ===\n";
+    auto t1 = chrono::high_resolution_clock::now();
+    for (int i = 0; i < N; i++) q.enqueue(i);
+    for (int i = 0; i < N; i++) q.dequeue();
+    auto t2 = chrono::high_resolution_clock::now();
+    cout << "Array Queue:  " << chrono::duration<double, milli>(t2 - t1).count() << " ms\n";
 
-    {
-        ArrayQueue q;
-        auto t1 = chrono::high_resolution_clock::now();
-        for (int i = 0; i < N; i++) q.enqueue(i);
-        for (int i = 0; i < N; i++) q.dequeue();
-        auto t2 = chrono::high_resolution_clock::now();
-        double ms = chrono::duration<double, milli>(t2 - t1).count();
-        cout << "Масив:\t\t" << ms << " мс\n";
-    }
-
-    {
-        LinkedQueue q;
-        auto t1 = chrono::high_resolution_clock::now();
-        for (int i = 0; i < N; i++) q.enqueue(i);
-        for (int i = 0; i < N; i++) q.dequeue();
-        auto t2 = chrono::high_resolution_clock::now();
-        double ms = chrono::duration<double, milli>(t2 - t1).count();
-        cout << "Зв'язний список: " << ms << " мс\n";
-    }
+    auto t3 = chrono::high_resolution_clock::now();
+    for (int i = 0; i < N; i++) lq.enqueue(i);
+    for (int i = 0; i < N; i++) lq.dequeue();
+    auto t4 = chrono::high_resolution_clock::now();
+    cout << "Linked Queue: " << chrono::duration<double, milli>(t4 - t3).count() << " ms\n";
 
     return 0;
 }
