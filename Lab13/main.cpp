@@ -1,129 +1,105 @@
-// Lab13/main.cpp
-// Лабораторна робота №13. Обхід графів: DFS та BFS.
-
 #include <iostream>
-#include <windows.h>
+#include <vector>
+#include <queue>
 
 using namespace std;
 
-#define MAX_V 10
+class Graph {
+public:
+    int n;
+    vector<int> adj[100];
+    bool visited[100];
 
-// Граф зберігаємо як список суміжності
-struct GNode {
-    int vertex;
-    GNode* next;
-};
-
-GNode* adj[MAX_V];
-int numVertices;
-
-void addEdge(int u, int v) {
-    GNode* n1 = new GNode{ v, adj[u] };
-    adj[u] = n1;
-    GNode* n2 = new GNode{ u, adj[v] };
-    adj[v] = n2;
-}
-
-// ====== DFS (рекурсивний) ======
-
-void dfsHelper(int v, bool visited[]) {
-    visited[v] = true;
-    cout << v << " ";
-    for (GNode* cur = adj[v]; cur; cur = cur->next) {
-        if (!visited[cur->vertex])
-            dfsHelper(cur->vertex, visited);
+    Graph(int vertices) {
+        n = vertices;
+        reset();
     }
-}
 
-void dfs(int start) {
-    bool visited[MAX_V] = {};
-    dfsHelper(start, visited);
-    cout << "\n";
-}
+    void reset() {
+        for (int i = 0; i < 100; i++) visited[i] = false;
+    }
 
-// ====== BFS (через чергу-масив) ======
+    void addEdge(int u, int v) {
+        adj[u].push_back(v);
+        adj[v].push_back(u);
+    }
 
-void bfs(int start) {
-    bool visited[MAX_V] = {};
-    int queue[MAX_V];
-    int front = 0, back = 0;
-
-    visited[start] = true;
-    queue[back++] = start;
-
-    while (front < back) {
-        int v = queue[front++];
+    void dfs(int v) {
+        visited[v] = true;
         cout << v << " ";
-        for (GNode* cur = adj[v]; cur; cur = cur->next) {
-            if (!visited[cur->vertex]) {
-                visited[cur->vertex] = true;
-                queue[back++] = cur->vertex;
+        for (int neighbor : adj[v]) {
+            if (!visited[neighbor]) {
+                dfs(neighbor);
             }
         }
     }
-    cout << "\n";
-}
 
-// Перевірка наявності циклу через DFS
-bool hasCycleHelper(int v, bool visited[], int parent) {
-    visited[v] = true;
-    for (GNode* cur = adj[v]; cur; cur = cur->next) {
-        int u = cur->vertex;
-        if (!visited[u]) {
-            if (hasCycleHelper(u, visited, v)) return true;
-        }
-        else if (u != parent) {
-            return true;
+    void bfs(int start) {
+        bool seen[100] = {false};
+        queue<int> q;
+        seen[start] = true;
+        q.push(start);
+
+        while (!q.empty()) {
+            int v = q.front();
+            q.pop();
+            cout << v << " ";
+            for (int neighbor : adj[v]) {
+                if (!seen[neighbor]) {
+                    seen[neighbor] = true;
+                    q.push(neighbor);
+                }
+            }
         }
     }
-    return false;
-}
 
-bool hasCycle() {
-    bool visited[MAX_V] = {};
-    for (int i = 0; i < numVertices; i++)
-        if (!visited[i])
-            if (hasCycleHelper(i, visited, -1)) return true;
-    return false;
-}
-
-void freeGraph() {
-    for (int i = 0; i < numVertices; i++) {
-        GNode* cur = adj[i];
-        while (cur) {
-            GNode* tmp = cur;
-            cur = cur->next;
-            delete tmp;
+    bool hasCycle(int v, int parent) {
+        visited[v] = true;
+        for (int neighbor : adj[v]) {
+            if (!visited[neighbor]) {
+                if (hasCycle(neighbor, v)) return true;
+            } else if (neighbor != parent) {
+                return true;
+            }
         }
-        adj[i] = nullptr;
+        return false;
     }
-}
+
+    bool findPath(int current, int target) {
+        if (current == target) return true;
+        visited[current] = true;
+        for (int neighbor : adj[current]) {
+            if (!visited[neighbor]) {
+                if (findPath(neighbor, target)) return true;
+            }
+        }
+        return false;
+    }
+};
 
 int main() {
-    SetConsoleOutputCP(1251);
-    SetConsoleCP(1251);
+    Graph g(6);
 
-    numVertices = 6;
-    for (int i = 0; i < numVertices; i++) adj[i] = nullptr;
+    g.addEdge(0, 1);
+    g.addEdge(0, 2);
+    g.addEdge(1, 3);
+    g.addEdge(2, 4);
+    g.addEdge(3, 5);
+    g.addEdge(4, 5);
 
-    addEdge(0, 1);
-    addEdge(0, 2);
-    addEdge(1, 3);
-    addEdge(2, 4);
-    addEdge(3, 5);
-    addEdge(4, 5);
+    cout << "DFS traversal: ";
+    g.dfs(0);
+    cout << endl;
 
-    cout << "=== Граф: 6 вершин ===\n";
-    cout << "Ребра: 0-1, 0-2, 1-3, 2-4, 3-5, 4-5\n\n";
+    cout << "BFS traversal: ";
+    g.bfs(0);
+    cout << endl;
 
-    cout << "DFS з вершини 0: ";
-    dfs(0);
+    g.reset();
+    cout << "Cycle detection: " << (g.hasCycle(0, -1) ? "Cycle found" : "No cycle") << endl;
 
-    cout << "BFS з вершини 0: ";
-    bfs(0);
+    g.reset();
+    cout << "Path from 0 to 5: " << (g.findPath(0, 5) ? "Path exists" : "No path") << endl;
 
-    cout << "Є цикл: " << (hasCycle() ? "так" : "ні") << "\n";
-
-    freeGraph();
     return 0;
 }
