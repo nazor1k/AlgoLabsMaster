@@ -9,13 +9,14 @@ class HashTable {
 private:
     int capacity;
     vector<vector<int>> buckets;
+    int itemsCount;
 
     int hashFunction(int key) {
         return abs(key) % capacity;
     }
 
 public:
-    HashTable(int size) : capacity(size) {
+    HashTable(int size) : capacity(size), itemsCount(0) {
         buckets.resize(capacity);
     }
 
@@ -25,6 +26,7 @@ public:
             if (x == key) return;
         }
         buckets[index].push_back(key);
+        itemsCount++;
     }
 
     bool search(int key) {
@@ -35,55 +37,68 @@ public:
         return false;
     }
 
+    void remove(int key) {
+        int index = hashFunction(key);
+        auto& bucket = buckets[index];
+        auto it = find(bucket.begin(), bucket.end(), key);
+        if (it != bucket.end()) {
+            bucket.erase(it);
+            itemsCount--;
+        }
+    }
+
     void print() {
-        if (capacity > 20) return;
         for (int i = 0; i < capacity; i++) {
             if (buckets[i].empty()) continue;
-            cout << "[" << i << "]: ";
-            for (int x : buckets[i]) cout << x << " ";
+            cout << "Bucket [" << i << "]: ";
+            for (int x : buckets[i]) {
+                cout << x << " ";
+            }
             cout << endl;
         }
     }
+
+    int size() { return itemsCount; }
 };
+
+void runBenchmark(int n) {
+    HashTable ht(1007);
+    
+    auto s1 = chrono::high_resolution_clock::now();
+    for (int i = 0; i < n; i++) ht.insert(rand());
+    auto e1 = chrono::high_resolution_clock::now();
+    double tIns = chrono::duration<double, milli>(e1 - s1).count();
+
+    auto s2 = chrono::high_resolution_clock::now();
+    for (int i = 0; i < n; i++) ht.search(rand());
+    auto e2 = chrono::high_resolution_clock::now();
+    double tSrch = chrono::duration<double, milli>(e2 - s2).count();
+
+    cout << "N = " << n << "\tInsert: " << tIns << " ms\tSearch: " << tSrch << " ms\n";
+}
 
 int main() {
     srand(time(0));
 
     cout << "=== Hash Table Demo ===\n";
-    HashTable demoTable(10);
-    vector<int> demoData = { 12, 22, 32, 45, 67, 89 };
-    for (int x : demoData) demoTable.insert(x);
-    demoTable.print();
-    cout << "Search 45: " << (demoTable.search(45) ? "Found" : "Not Found") << "\n\n";
+    HashTable ht(10);
+    int demoData[] = { 10, 25, 30, 45, 12, 67, 30 };
+    for (int x : demoData) ht.insert(x);
 
-    int N = 50000;
-    int target = -1;
-    cout << "=== Performance Comparison (N=" << N << ") ===\n";
-    cout << "Format: Preparation (ms) + Search (ms) = Total (ms)\n";
+    cout << "Table state:\n";
+    ht.print();
 
-    vector<int> data(N);
-    for (int i = 0; i < N; i++) data[i] = rand() % 1000000;
+    cout << "\nSearch 45: " << (ht.search(45) ? "Found" : "Not Found") << endl;
+    cout << "Search 99: " << (ht.search(99) ? "Found" : "Not Found") << endl;
 
-    auto s1 = chrono::high_resolution_clock::now();
-    sort(data.begin(), data.end());
-    auto s2 = chrono::high_resolution_clock::now();
-    binary_search(data.begin(), data.end(), target);
-    auto s3 = chrono::high_resolution_clock::now();
+    cout << "\nRemoving 25...\n";
+    ht.remove(25);
+    ht.print();
 
-    double sortTime = chrono::duration<double, milli>(s2 - s1).count();
-    double binSearchTime = chrono::duration<double, milli>(s3 - s2).count();
-    cout << "Binary Search: " << sortTime << " + " << binSearchTime << " = " << sortTime + binSearchTime << " ms\n";
-
-    auto h1 = chrono::high_resolution_clock::now();
-    HashTable ht(N);
-    for (int x : data) ht.insert(x);
-    auto h2 = chrono::high_resolution_clock::now();
-    ht.search(target);
-    auto h3 = chrono::high_resolution_clock::now();
-
-    double buildTime = chrono::duration<double, milli>(h2 - h1).count();
-    double hashSearchTime = chrono::duration<double, milli>(h3 - h2).count();
-    cout << "Hash Table:    " << buildTime << " + " << hashSearchTime << " = " << buildTime + hashSearchTime << " ms\n";
+    cout << "\n=== Performance Benchmark ===\n";
+    runBenchmark(1000);
+    runBenchmark(10000);
+    runBenchmark(100000);
 
     return 0;
 }
