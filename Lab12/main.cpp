@@ -124,15 +124,23 @@ void runTest(int numVertices, int numEdges, string label) {
 
 int main() {
     int small_size = 5;
-    cout << "=== Demo ===\n";
+    cout << "=== Demo Mode ===\n";
     AdjacencyMatrix mat(small_size);
     AdjacencyList lst(small_size);
     
     mat.addEdge(0, 1); lst.addEdge(0, 1);
+    mat.addEdge(0, 2); lst.addEdge(0, 2);
     mat.addEdge(2, 3); lst.addEdge(2, 3);
     
-    cout << "Matrix output:\n"; mat.print();
-    cout << "\nList output:\n";  lst.print();
+    cout << "Initial Matrix:\n"; mat.print();
+    cout << "\nInitial List:\n";  lst.print();
+
+    cout << "\nRemoving edge (0,1)...\n";
+    mat.removeEdge(0, 1);
+    lst.removeEdge(0, 1);
+
+    cout << "\nMatrix after removal:\n"; mat.print();
+    cout << "\nList after removal:\n";   lst.print();
 
     runTest(1000, 2000, "Sparse");
     runTest(1000, 50000, "Dense");
