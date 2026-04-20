@@ -49,16 +49,16 @@ void bucketSort(vector<int>& arr, int maxVal, int bucketCount, long long& checks
     vector<vector<int>> buckets(bucketCount);
 
     for (int x : arr) {
-        int k = x / bucketSize;
-        if (k >= bucketCount) k = bucketCount - 1;
-        buckets[k].push_back(x);
+        int bucket_index = x / bucketSize;
+        if (bucket_index >= bucketCount) bucket_index = bucketCount - 1;
+        buckets[bucket_index].push_back(x);
     }
 
     arr.clear();
-    for (int k = 0; k < bucketCount; k++) {
-        if (!buckets[k].empty()) {
-            insertionSort(buckets[k], checks, changes);
-            for (int x : buckets[k]) {
+    for (int bucket_index = 0; bucket_index < bucketCount; bucket_index++) {
+        if (!buckets[bucket_index].empty()) {
+            insertionSort(buckets[bucket_index], checks, changes);
+            for (int x : buckets[bucket_index]) {
                 arr.push_back(x);
                 changes++;
             }
