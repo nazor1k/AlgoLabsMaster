@@ -1,138 +1,123 @@
 // Lab7/main.cpp
-// Лабораторна робота №7. Сортування підрахунком та блокове сортування.
 
 #include <iostream>
 #include <ctime>
 #include <cstdlib>
 #include <chrono>
-#include <windows.h>
+#include <vector>
+#include <algorithm>
 
 using namespace std;
+using namespace std::chrono;
 
-#define MAX_SIZE 10001
-#define MAX_VAL  9999
-#define KOSHY    10
+const int MAX_VAL = 9999;
+const int BUCKETS_COUNT = 10;
 
-// Сортування підрахунком (для невід'ємних чисел до maxVal)
-void countingSort(int arr[], int n, int maxVal) {
-    int* countArr = new int[maxVal + 1]();
-    for (int i = 0; i < n; i++)
-        countArr[arr[i]]++;
+void countingSort(vector<int>& arr, int maxVal, long long& checks, long long& changes) {
+    if (arr.empty()) return;
+    vector<int> countArr(maxVal + 1, 0);
+    for (int x : arr) {
+        countArr[x]++;
+    }
     int index = 0;
     for (int v = 0; v <= maxVal; v++) {
         while (countArr[v] > 0) {
-            arr[index] = v;
-            index++;
+            arr[index++] = v;
             countArr[v]--;
+            changes++;
         }
     }
-    delete[] countArr;
 }
 
-// Сортування вставкою для одного кошика (допоміжна)
-void insertionSortRange(int arr[], int left, int right) {
-    for (int i = left + 1; i <= right; i++) {
+void insertionSort(vector<int>& arr, long long& checks, long long& changes) {
+    int n = arr.size();
+    for (int i = 1; i < n; i++) {
         int element = arr[i];
         int j = i - 1;
-        while (j >= left && arr[j] > element) {
+        while (j >= 0 && arr[j] > element) {
+            checks++;
             arr[j + 1] = arr[j];
+            changes++;
             j--;
         }
+        if (j >= 0) checks++; // Last check that failed the while condition
         arr[j + 1] = element;
     }
 }
 
-// Блокове сортування
-void bucketSort(int arr[], int n, int maxVal, int bucketCount) {
-    int bucketSize = maxVal / bucketCount + 1;
+void bucketSort(vector<int>& arr, int maxVal, int bucketCount, long long& checks, long long& changes) {
+    if (arr.empty()) return;
+    int bucketSize = (maxVal / bucketCount) + 1;
+    vector<vector<int>> buckets(bucketCount);
 
-    int* bucketStart = new int[bucketCount]();
-    int* bucketLen = new int[bucketCount]();
-    int* temp     = new int[n];
-    int* index = new int[bucketCount]();
-
-    // Рахуємо кількість елементів у кожному кошику
-    for (int i = 0; i < n; i++) {
-        int k = arr[i] / bucketSize;
+    // Distribution
+    for (int x : arr) {
+        int k = x / bucketSize;
         if (k >= bucketCount) k = bucketCount - 1;
-        bucketLen[k]++;
+        buckets[k].push_back(x);
     }
 
-    // Визначаємо початкові позиції кошиків
-    bucketStart[0] = 0;
-    for (int i = 1; i < bucketCount; i++)
-        bucketStart[i] = bucketStart[i - 1] + bucketLen[i - 1];
-
-    // Розкладаємо елементи по кошиках у temp
-    for (int i = 0; i < n; i++) {
-        int k = arr[i] / bucketSize;
-        if (k >= bucketCount) k = bucketCount - 1;
-        temp[bucketStart[k] + index[k]] = arr[i];
-        index[k]++;
-    }
-
-    // Сортуємо кожен кошик вставкою
+    // Sort each bucket and merge
+    arr.clear();
     for (int k = 0; k < bucketCount; k++) {
-        if (bucketLen[k] > 1)
-            insertionSortRange(temp, bucketStart[k], bucketStart[k] + bucketLen[k] - 1);
+        if (!buckets[k].empty()) {
+            insertionSort(buckets[k], checks, changes);
+            for (int x : buckets[k]) {
+                arr.push_back(x);
+                changes++;
+            }
+        }
     }
-
-    // Копіюємо назад
-    for (int i = 0; i < n; i++)
-        arr[i] = temp[i];
-
-    delete[] bucketStart;
-    delete[] bucketLen;
-    delete[] temp;
-    delete[] index;
 }
 
-void generateArray(int arr[], int n) {
+vector<int> generateArray(int n) {
+    vector<int> arr(n);
     for (int i = 0; i < n; i++)
         arr[i] = rand() % (MAX_VAL + 1);
+    return arr;
 }
-
-void copyArray(int src[], int dst[], int n) {
-    for (int i = 0; i < n; i++)
-        dst[i] = src[i];
-}
-
-int original[MAX_SIZE];
-int arr[MAX_SIZE];
 
 int main() {
-    SetConsoleOutputCP(1251);
-    SetConsoleCP(1251);
     srand((unsigned)time(0));
+    vector<int> rozmiry = { 100, 1000, 10000 };
 
-    int rozmiry[] = { 100, 1000, 10000 };
+    cout << "Lab 7. Counting sort vs Bucket sort (Vector implementation)\n\n";
+    
+    auto printSeparator = []() {
+        for (int i = 0; i < 75; i++) cout << "-";
+        cout << "\n";
+    };
 
-    cout << "Лабораторна №7. Сортування підрахунком vs Блокове сортування\n";
-    cout << "===========================================\n";
-    cout << "Розмір\tАлгоритм\t\tЧас(мс)\n";
-    cout << "-------------------------------------------\n";
+    printSeparator();
+    cout << "Size\t| Algorithm\t| Checks\t| Changes\t| Time(ns)\n";
+    printSeparator();
 
-    for (int s = 0; s < 3; s++) {
-        int n = rozmiry[s];
-        generateArray(original, n);
+    for (int n : rozmiry) {
+        vector<int> original = generateArray(n);
 
-        // Сортування підрахунком
-        copyArray(original, arr, n);
-        auto t1 = chrono::high_resolution_clock::now();
-        countingSort(arr, n, MAX_VAL);
-        auto t2 = chrono::high_resolution_clock::now();
-        double ms1 = chrono::duration<double, milli>(t2 - t1).count();
-        cout << n << "\tПідрахунком\t\t" << ms1 << "\n";
+        // Counting Sort
+        vector<int> v1 = original;
+        long long checks1 = 0;
+        long long changes1 = 0;
+        auto t1 = high_resolution_clock::now();
+        countingSort(v1, MAX_VAL, checks1, changes1);
+        auto t2 = high_resolution_clock::now();
+        long long ns1 = duration_cast<nanoseconds>(t2 - t1).count();
+        
+        cout << n << "\t| Counting\t| " << checks1 << "\t\t| " << changes1 << "\t\t| " << ns1 << "\n";
 
-        // Блокове сортування
-        copyArray(original, arr, n);
-        auto t3 = chrono::high_resolution_clock::now();
-        bucketSort(arr, n, MAX_VAL, KOSHY);
-        auto t4 = chrono::high_resolution_clock::now();
-        double ms2 = chrono::duration<double, milli>(t4 - t3).count();
-        cout << "\tБлокове\t\t\t" << ms2 << "\n";
-
-        cout << "-------------------------------------------\n";
+        // Bucket Sort
+        vector<int> v2 = original;
+        long long checks2 = 0;
+        long long changes2 = 0;
+        auto t3 = high_resolution_clock::now();
+        bucketSort(v2, MAX_VAL, BUCKETS_COUNT, checks2, changes2);
+        auto t4 = high_resolution_clock::now();
+        long long ns2 = duration_cast<nanoseconds>(t4 - t3).count();
+        
+        cout << "\t| Bucket\t| " << checks2 << "\t\t| " << changes2 << "\t\t| " << ns2 << "\n";
+             
+        printSeparator();
     }
 
     return 0;
