@@ -1,40 +1,30 @@
-// Lab9/main.cpp
-// Лабораторна робота №9. Стек: реалізація на масиві та зв'язному списку.
-
 #include <iostream>
 #include <chrono>
-#include <windows.h>
+#include <vector>
 
 using namespace std;
 
-// ====== Стек на масиві ======
-
-#define MAX_SIZE 100000
-
 struct ArrayStack {
-    int data[MAX_SIZE];
-    int top;
-    ArrayStack() : top(-1) {}
+    vector<int> data;
 
-    bool isEmpty() { return top == -1; }
-    bool isFull()  { return top == MAX_SIZE - 1; }
+    bool isEmpty() { return data.empty(); }
 
     void push(int val) {
-        if (!isFull()) data[++top] = val;
+        data.push_back(val);
     }
 
     int pop() {
-        if (!isEmpty()) return data[top--];
-        return -1;
+        if (isEmpty()) return -1;
+        int val = data.back();
+        data.pop_back();
+        return val;
     }
 
     int peek() {
-        if (!isEmpty()) return data[top];
-        return -1;
+        if (isEmpty()) return -1;
+        return data.back();
     }
 };
-
-// ====== Стек на зв'язному списку ======
 
 struct SNode {
     int data;
@@ -42,30 +32,28 @@ struct SNode {
 };
 
 struct LinkedStack {
-    SNode* top;
-    LinkedStack() : top(nullptr) {}
+    SNode* topNode;
+    LinkedStack() : topNode(nullptr) {}
 
-    bool isEmpty() { return top == nullptr; }
+    bool isEmpty() { return topNode == nullptr; }
 
     void push(int val) {
-        SNode* node = new SNode{ val, top };
-        top = node;
+        SNode* node = new SNode{ val, topNode };
+        topNode = node;
     }
 
     int pop() {
-        if (!isEmpty()) {
-            int val = top->data;
-            SNode* tmp = top;
-            top = top->next;
-            delete tmp;
-            return val;
-        }
-        return -1;
+        if (isEmpty()) return -1;
+        int val = topNode->data;
+        SNode* tmp = topNode;
+        topNode = topNode->next;
+        delete tmp;
+        return val;
     }
 
     int peek() {
-        if (!isEmpty()) return top->data;
-        return -1;
+        if (isEmpty()) return -1;
+        return topNode->data;
     }
 
     ~LinkedStack() {
@@ -74,32 +62,29 @@ struct LinkedStack {
 };
 
 int main() {
-    SetConsoleOutputCP(1251);
-    SetConsoleCP(1251);
-
     int N = 50000;
 
-    cout << "=== Стек на масиві ===\n";
+    cout << "=== Stack on Vector ===\n";
     {
         ArrayStack s;
         s.push(10); s.push(20); s.push(30);
         cout << "peek: " << s.peek() << "\n";
         cout << "pop: " << s.pop() << "\n";
         cout << "pop: " << s.pop() << "\n";
-        cout << "isEmpty: " << (s.isEmpty() ? "так" : "ні") << "\n";
+        cout << "isEmpty: " << (s.isEmpty() ? "Yes" : "No") << "\n";
     }
 
-    cout << "\n=== Стек на зв'язному списку ===\n";
+    cout << "\n=== Stack on Linked List ===\n";
     {
         LinkedStack s;
         s.push(10); s.push(20); s.push(30);
         cout << "peek: " << s.peek() << "\n";
         cout << "pop: " << s.pop() << "\n";
         cout << "pop: " << s.pop() << "\n";
-        cout << "isEmpty: " << (s.isEmpty() ? "так" : "ні") << "\n";
+        cout << "isEmpty: " << (s.isEmpty() ? "Yes" : "No") << "\n";
     }
 
-    cout << "\n=== Порівняння продуктивності (N=" << N << " операцій) ===\n";
+    cout << "\n=== Performance (N=" << N << ") ===\n";
 
     {
         ArrayStack s;
@@ -108,7 +93,7 @@ int main() {
         for (int i = 0; i < N; i++) s.pop();
         auto t2 = chrono::high_resolution_clock::now();
         double ms = chrono::duration<double, milli>(t2 - t1).count();
-        cout << "Масив:\t\t" << ms << " мс\n";
+        cout << "Vector:\t\t" << ms << " ms\n";
     }
 
     {
@@ -118,7 +103,7 @@ int main() {
         for (int i = 0; i < N; i++) s.pop();
         auto t2 = chrono::high_resolution_clock::now();
         double ms = chrono::duration<double, milli>(t2 - t1).count();
-        cout << "Зв'язний список: " << ms << " мс\n";
+        cout << "Linked List:\t" << ms << " ms\n";
     }
 
     return 0;
