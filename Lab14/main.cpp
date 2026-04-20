@@ -30,52 +30,47 @@ int binarySearch(const vector<int>& arr, int target, long long& comparisons) {
 
 int main() {
     srand(time(0));
-
-    cout << "=== Demo with existing target ===\n";
-    vector<int> demoArr = { 15, 42, 8, 91, 23, 67, 34, 55 };
-    int demoTarget = 67;
-    long long demoCmp;
-    
-    cout << "Array: 15 42 8 91 23 67 34 55\n";
-    cout << "Searching for: " << demoTarget << "\n";
-    
-    int lIdx = linearSearch(demoArr, demoTarget, demoCmp);
-    cout << "Linear: found at index " << lIdx << " with " << demoCmp << " checks\n";
-    
-    sort(demoArr.begin(), demoArr.end());
-    int bIdx = binarySearch(demoArr, demoTarget, demoCmp);
-    cout << "Binary: found at index " << bIdx << " with " << demoCmp << " checks (after sort)\n\n";
-
-    cout << "Size\tAlgorithm\tComparisons\tTime (ms) [Sort + Search = Total]\n";
-    cout << "--------------------------------------------------------------------------\n";
-
     vector<int> sizes = { 100, 1000, 10000, 100000 };
+
+    cout << "Size\tAlgorithm (Status)\tComparisons\tTime (ms) [Sort + Search = Total]\n";
+    cout << "----------------------------------------------------------------------------------\n";
+
     for (int n : sizes) {
         vector<int> arr(n);
         for (int i = 0; i < n; i++) arr[i] = rand() % 1000000;
-        
-        // Target is an existing element from the middle of the array
-        int target = arr[n / 2];
+        int targetFound = arr[n / 2];
+        int targetNotFound = -1;
         long long cmp;
 
         auto s1 = chrono::high_resolution_clock::now();
-        linearSearch(arr, target, cmp);
+        linearSearch(arr, targetNotFound, cmp);
         auto e1 = chrono::high_resolution_clock::now();
-        double tLinear = chrono::duration<double, milli>(e1 - s1).count();
-        cout << n << "\tLinear\t\t" << cmp << "\t\t0.00 + " << tLinear << " = " << tLinear << "\n";
+        double tL1 = chrono::duration<double, milli>(e1 - s1).count();
+        cout << n << "\tLinear (Not Found)\t" << cmp << "\t\t0.00 + " << tL1 << " = " << tL1 << "\n";
 
-        auto s_sort = chrono::high_resolution_clock::now();
+        auto s2 = chrono::high_resolution_clock::now();
+        linearSearch(arr, targetFound, cmp);
+        auto e2 = chrono::high_resolution_clock::now();
+        double tL2 = chrono::duration<double, milli>(e2 - s2).count();
+        cout << "\tLinear (Found)\t\t" << cmp << "\t\t0.00 + " << tL2 << " = " << tL2 << "\n";
+
+        auto ss = chrono::high_resolution_clock::now();
         sort(arr.begin(), arr.end());
-        auto e_sort = chrono::high_resolution_clock::now();
-        double tSort = chrono::duration<double, milli>(e_sort - s_sort).count();
+        auto es = chrono::high_resolution_clock::now();
+        double tSort = chrono::duration<double, milli>(es - ss).count();
 
-        auto s_bin = chrono::high_resolution_clock::now();
-        binarySearch(arr, target, cmp);
-        auto e_bin = chrono::high_resolution_clock::now();
-        double tBin = chrono::duration<double, milli>(e_bin - s_bin).count();
+        auto s3 = chrono::high_resolution_clock::now();
+        binarySearch(arr, targetNotFound, cmp);
+        auto e3 = chrono::high_resolution_clock::now();
+        double tB1 = chrono::duration<double, milli>(e3 - s3).count();
+        cout << "\tBinary (Not Found)\t" << cmp << "\t\t" << tSort << " + " << tB1 << " = " << (tSort + tB1) << "\n";
 
-        cout << "\tBinary\t\t" << cmp << "\t\t" << tSort << " + " << tBin << " = " << (tSort + tBin) << "\n";
-        cout << "--------------------------------------------------------------------------\n";
+        auto s4 = chrono::high_resolution_clock::now();
+        binarySearch(arr, targetFound, cmp);
+        auto e4 = chrono::high_resolution_clock::now();
+        double tB2 = chrono::duration<double, milli>(e4 - s4).count();
+        cout << "\tBinary (Found)\t\t" << cmp << "\t\t" << tSort << " + " << tB2 << " = " << (tSort + tB2) << "\n";
+        cout << "----------------------------------------------------------------------------------\n";
     }
 
     return 0;
