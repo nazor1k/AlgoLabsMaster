@@ -89,15 +89,23 @@ int main() {
     Queue q;
     q.enqueue(10); q.enqueue(20); q.enqueue(30);
     cout << "peek: " << q.peek() << "\n";
-    cout << "dequeue: " << q.dequeue() << "\n";
-    cout << "size: " << q.size() << "\n";
+    cout << "size before: " << q.size() << "\n";
+    cout << "dequeue all: ";
+    while (!q.isEmpty()) {
+        cout << q.dequeue() << " ";
+    }
+    cout << "\nsize after: " << q.size() << "\n";
 
     cout << "\n=== LinkedList Queue ===\n";
     LinkedListQueue lq;
     lq.enqueue(10); lq.enqueue(20); lq.enqueue(30);
     cout << "peek: " << lq.peek() << "\n";
-    cout << "dequeue: " << lq.dequeue() << "\n";
-    cout << "size: " << lq.size() << "\n";
+    cout << "size before: " << lq.size() << "\n";
+    cout << "dequeue all: ";
+    while (!lq.isEmpty()) {
+        cout << lq.dequeue() << " ";
+    }
+    cout << "\nsize after: " << lq.size() << "\n";
 
     cout << "\n=== Performance Comparison (N=" << N << ") ===\n";
 
