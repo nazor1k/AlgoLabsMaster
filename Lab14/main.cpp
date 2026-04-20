@@ -30,31 +30,42 @@ int binarySearch(const vector<int>& arr, int target, long long& comparisons) {
 
 int main() {
     srand(time(0));
-    vector<int> sizes = { 100, 1000, 10000, 100000 };
+
+    cout << "=== Demo with existing target ===\n";
+    vector<int> demoArr = { 15, 42, 8, 91, 23, 67, 34, 55 };
+    int demoTarget = 67;
+    long long demoCmp;
+    
+    cout << "Array: 15 42 8 91 23 67 34 55\n";
+    cout << "Searching for: " << demoTarget << "\n";
+    
+    int lIdx = linearSearch(demoArr, demoTarget, demoCmp);
+    cout << "Linear: found at index " << lIdx << " with " << demoCmp << " checks\n";
+    
+    sort(demoArr.begin(), demoArr.end());
+    int bIdx = binarySearch(demoArr, demoTarget, demoCmp);
+    cout << "Binary: found at index " << bIdx << " with " << demoCmp << " checks (after sort)\n\n";
 
     cout << "Size\tAlgorithm\tComparisons\tTime (ms)\n";
     cout << "--------------------------------------------------\n";
 
+    vector<int> sizes = { 100, 1000, 10000, 100000 };
     for (int n : sizes) {
         vector<int> arr(n);
         for (int i = 0; i < n; i++) arr[i] = rand() % 1000000;
-
         int target = -1;
         long long cmp;
 
-        auto start = chrono::high_resolution_clock::now();
+        auto s1 = chrono::high_resolution_clock::now();
         linearSearch(arr, target, cmp);
-        auto end = chrono::high_resolution_clock::now();
-        double linearTime = chrono::duration<double, milli>(end - start).count();
-        cout << n << "\tLinear\t\t" << cmp << "\t\t" << linearTime << "\n";
+        auto e1 = chrono::high_resolution_clock::now();
+        cout << n << "\tLinear\t\t" << cmp << "\t\t" << chrono::duration<double, milli>(e1 - s1).count() << "\n";
 
+        auto s2 = chrono::high_resolution_clock::now();
         sort(arr.begin(), arr.end());
-
-        start = chrono::high_resolution_clock::now();
         binarySearch(arr, target, cmp);
-        end = chrono::high_resolution_clock::now();
-        double binaryTime = chrono::duration<double, milli>(end - start).count();
-        cout << "\tBinary\t\t" << cmp << "\t\t" << binaryTime << "\n";
+        auto e2 = chrono::high_resolution_clock::now();
+        cout << "\tBinary+Sort\t" << cmp << "\t\t" << chrono::duration<double, milli>(e2 - s2).count() << "\n";
         cout << "--------------------------------------------------\n";
     }
 
