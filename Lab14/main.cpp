@@ -30,15 +30,32 @@ int binarySearch(const vector<int>& arr, int target, long long& comparisons) {
 
 int main() {
     srand(time(0));
-    vector<int> sizes = { 100, 1000, 10000, 100000 };
+
+    cout << "=== Demo with existing target ===\n";
+    vector<int> demoArr = { 15, 42, 8, 91, 23, 67, 34, 55 };
+    int demoTarget = 67;
+    long long demoCmp;
+    
+    cout << "Array: 15 42 8 91 23 67 34 55\n";
+    cout << "Searching for: " << demoTarget << "\n";
+    
+    int lIdx = linearSearch(demoArr, demoTarget, demoCmp);
+    cout << "Linear: found at index " << lIdx << " with " << demoCmp << " checks\n";
+    
+    sort(demoArr.begin(), demoArr.end());
+    int bIdx = binarySearch(demoArr, demoTarget, demoCmp);
+    cout << "Binary: found at index " << bIdx << " with " << demoCmp << " checks (after sort)\n\n";
 
     cout << "Size\tAlgorithm\tComparisons\tTime (ms) [Sort + Search = Total]\n";
     cout << "--------------------------------------------------------------------------\n";
 
+    vector<int> sizes = { 100, 1000, 10000, 100000 };
     for (int n : sizes) {
         vector<int> arr(n);
         for (int i = 0; i < n; i++) arr[i] = rand() % 1000000;
-        int target = -1;
+        
+        // Target is an existing element from the middle of the array
+        int target = arr[n / 2];
         long long cmp;
 
         auto s1 = chrono::high_resolution_clock::now();
