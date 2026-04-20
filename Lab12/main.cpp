@@ -8,40 +8,40 @@ using namespace std;
 class AdjacencyMatrix {
 private:
     vector<vector<int>> matrix;
-    int n;
+    int size;
 
 public:
-    AdjacencyMatrix(int vertices) : n(vertices) {
-        matrix.resize(n, vector<int>(n, 0));
+    AdjacencyMatrix(int n) : size(n) {
+        matrix.resize(size, vector<int>(size, 0));
     }
 
-    void addEdge(int u, int v) {
-        if (u < n && v < n) {
-            matrix[u][v] = 1;
-            matrix[v][u] = 1;
+    void addEdge(int start, int end) {
+        if (start < size && end < size) {
+            matrix[start][end] = 1;
+            matrix[end][start] = 1;
         }
     }
 
-    void removeEdge(int u, int v) {
-        if (u < n && v < n) {
-            matrix[u][v] = 0;
-            matrix[v][u] = 0;
+    void removeEdge(int start, int end) {
+        if (start < size && end < size) {
+            matrix[start][end] = 0;
+            matrix[end][start] = 0;
         }
     }
 
-    bool hasEdge(int u, int v) {
-        if (u < n && v < n) return matrix[u][v] == 1;
+    bool hasEdge(int start, int end) {
+        if (start < size && end < size) return matrix[start][end] == 1;
         return false;
     }
 
     void print() {
-        if (n > 10) return;
+        if (size > 10) return;
         cout << "  ";
-        for (int i = 0; i < n; i++) cout << i << " ";
+        for (int i = 0; i < size; i++) cout << i << " ";
         cout << "\n";
-        for (int i = 0; i < n; i++) {
+        for (int i = 0; i < size; i++) {
             cout << i << " ";
-            for (int j = 0; j < n; j++) cout << matrix[i][j] << " ";
+            for (int j = 0; j < size; j++) cout << matrix[i][j] << " ";
             cout << "\n";
         }
     }
@@ -49,90 +49,93 @@ public:
 
 class AdjacencyList {
 private:
-    vector<vector<int>> adj;
-    int n;
+    vector<vector<int>> list;
+    int size;
 
 public:
-    AdjacencyList(int vertices) : n(vertices) {
-        adj.resize(n);
+    AdjacencyList(int n) : size(n) {
+        list.resize(size);
     }
 
-    void addEdge(int u, int v) {
-        if (u < n && v < n) {
-            adj[u].push_back(v);
-            adj[v].push_back(u);
+    void addEdge(int start, int end) {
+        if (start < size && end < size) {
+            list[start].push_back(end);
+            list[end].push_back(start);
         }
     }
 
-    void removeEdge(int u, int v) {
-        if (u >= n || v >= n) return;
-        auto& v1 = adj[u];
-        v1.erase(remove(v1.begin(), v1.end(), v), v1.end());
-        auto& v2 = adj[v];
-        v2.erase(remove(v2.begin(), v2.end(), u), v2.end());
+    void removeEdge(int start, int end) {
+        if (start >= size || end >= size) return;
+        
+        auto& v1 = list[start];
+        v1.erase(remove(v1.begin(), v1.end(), end), v1.end());
+        
+        auto& v2 = list[end];
+        v2.erase(remove(v2.begin(), v2.end(), start), v2.end());
     }
 
-    bool hasEdge(int u, int v) {
-        if (u >= n) return false;
-        return find(adj[u].begin(), adj[u].end(), v) != adj[u].end();
+    bool hasEdge(int start, int end) {
+        if (start >= size) return false;
+        return find(list[start].begin(), list[start].end(), end) != list[start].end();
     }
 
     void print() {
-        if (n > 10) return;
-        for (int i = 0; i < n; i++) {
+        if (size > 10) return;
+        for (int i = 0; i < size; i++) {
             cout << i << ": ";
-            for (size_t j = 0; j < adj[i].size(); j++) {
-                cout << adj[i][j] << (j == adj[i].size() - 1 ? "" : " -> ");
+            for (size_t j = 0; j < list[i].size(); j++) {
+                cout << list[i][j] << (j == list[i].size() - 1 ? "" : " -> ");
             }
             cout << "\n";
         }
     }
 };
 
-void runBenchmark(int V, int E_count, string type) {
-    cout << "\n--- Testing " << type << " Graph (V=" << V << ", E=" << E_count << ") ---\n";
+void runTest(int numVertices, int numEdges, string label) {
+    cout << "\n--- Testing " << label << " Graph (Nodes: " << numVertices << ", Edges: " << numEdges << ") ---\n";
 
-    AdjacencyMatrix m(V);
-    AdjacencyList l(V);
+    AdjacencyMatrix mat(numVertices);
+    AdjacencyList lst(numVertices);
 
-    auto t1 = chrono::high_resolution_clock::now();
-    for (int i = 0; i < E_count; i++) {
-        m.addEdge(i % V, (i + 1) % V);
+    auto start_time = chrono::high_resolution_clock::now();
+    for (int i = 0; i < numEdges; i++) {
+        mat.addEdge(i % numVertices, (i + 1) % numVertices);
     }
-    auto t2 = chrono::high_resolution_clock::now();
-    cout << "Matrix addEdge: " << chrono::duration<double, milli>(t2 - t1).count() << " ms\n";
+    auto end_time = chrono::high_resolution_clock::now();
+    cout << "Matrix add: " << chrono::duration<double, milli>(end_time - start_time).count() << " ms\n";
 
-    auto t3 = chrono::high_resolution_clock::now();
-    for (int i = 0; i < E_count; i++) {
-        l.addEdge(i % V, (i + 1) % V);
+    start_time = chrono::high_resolution_clock::now();
+    for (int i = 0; i < numEdges; i++) {
+        lst.addEdge(i % numVertices, (i + 1) % numVertices);
     }
-    auto t4 = chrono::high_resolution_clock::now();
-    cout << "List addEdge:   " << chrono::duration<double, milli>(t4 - t3).count() << " ms\n";
+    end_time = chrono::high_resolution_clock::now();
+    cout << "List add:   " << chrono::duration<double, milli>(end_time - start_time).count() << " ms\n";
 
-    auto t5 = chrono::high_resolution_clock::now();
-    for (int i = 0; i < 1000; i++) m.hasEdge(1, 2);
-    auto t6 = chrono::high_resolution_clock::now();
-    cout << "Matrix search:  " << chrono::duration<double, milli>(t6 - t5).count() << " ms\n";
+    start_time = chrono::high_resolution_clock::now();
+    for (int i = 0; i < 1000; i++) mat.hasEdge(1, 2);
+    end_time = chrono::high_resolution_clock::now();
+    cout << "Matrix search: " << chrono::duration<double, milli>(end_time - start_time).count() << " ms\n";
 
-    auto t7 = chrono::high_resolution_clock::now();
-    for (int i = 0; i < 1000; i++) l.hasEdge(1, 2);
-    auto t8 = chrono::high_resolution_clock::now();
-    cout << "List search:    " << chrono::duration<double, milli>(t8 - t7).count() << " ms\n";
+    start_time = chrono::high_resolution_clock::now();
+    for (int i = 0; i < 1000; i++) lst.hasEdge(1, 2);
+    end_time = chrono::high_resolution_clock::now();
+    cout << "List search:   " << chrono::duration<double, milli>(end_time - start_time).count() << " ms\n";
 }
 
 int main() {
-    int V_small = 5;
-    cout << "=== Demo Mode ===\n";
-    AdjacencyMatrix m(V_small);
-    AdjacencyList l(V_small);
-    m.addEdge(0, 1); l.addEdge(0, 1);
-    m.addEdge(2, 3); l.addEdge(2, 3);
+    int small_size = 5;
+    cout << "=== Demo ===\n";
+    AdjacencyMatrix mat(small_size);
+    AdjacencyList lst(small_size);
     
-    cout << "Matrix:\n"; m.print();
-    cout << "\nList:\n";   l.print();
+    mat.addEdge(0, 1); lst.addEdge(0, 1);
+    mat.addEdge(2, 3); lst.addEdge(2, 3);
+    
+    cout << "Matrix output:\n"; mat.print();
+    cout << "\nList output:\n";  lst.print();
 
-    runBenchmark(1000, 2000, "Sparse");
-    runBenchmark(1000, 100000, "Dense");
+    runTest(1000, 2000, "Sparse");
+    runTest(1000, 50000, "Dense");
 
     return 0;
 }
