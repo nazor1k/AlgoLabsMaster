@@ -1,133 +1,115 @@
-// Lab11/main.cpp
-// Лабораторна робота №11. Бінарне дерево пошуку (BST).
-
 #include <iostream>
-#include <windows.h>
 
 using namespace std;
 
 struct Node {
     int data;
-    Node* left;
-    Node* right;
+    Node *left, *right;
+    Node(int val) : data(val), left(nullptr), right(nullptr) {}
 };
 
-Node* newNode(int val) {
-    Node* n = new Node;
-    n->data = val;
-    n->left = n->right = nullptr;
-    return n;
-}
+class BinarySearchTree {
+private:
+    Node* root;
 
-Node* insert(Node* root, int val) {
-    if (!root) return newNode(val);
-    if (val < root->data)
-        root->left = insert(root->left, val);
-    else if (val > root->data)
-        root->right = insert(root->right, val);
-    return root;
-}
-
-bool search(Node* root, int val) {
-    if (!root) return false;
-    if (val == root->data) return true;
-    if (val < root->data) return search(root->left, val);
-    return search(root->right, val);
-}
-
-Node* findMin(Node* root) {
-    while (root->left) root = root->left;
-    return root;
-}
-
-Node* deleteNode(Node* root, int val) {
-    if (!root) return nullptr;
-    if (val < root->data) {
-        root->left = deleteNode(root->left, val);
+    Node* insert(Node* node, int val) {
+        if (!node) return new Node(val);
+        if (val < node->data) node->left = insert(node->left, val);
+        else if (val > node->data) node->right = insert(node->right, val);
+        return node;
     }
-    else if (val > root->data) {
-        root->right = deleteNode(root->right, val);
+
+    bool search(Node* node, int val) {
+        if (!node) return false;
+        if (val == node->data) return true;
+        return (val < node->data) ? search(node->left, val) : search(node->right, val);
     }
-    else {
-        if (!root->left) {
-            Node* tmp = root->right;
-            delete root;
-            return tmp;
+
+    Node* findMin(Node* node) {
+        while (node && node->left) node = node->left;
+        return node;
+    }
+
+    Node* remove(Node* node, int val) {
+        if (!node) return nullptr;
+        if (val < node->data) node->left = remove(node->left, val);
+        else if (val > node->data) node->right = remove(node->right, val);
+        else {
+            if (!node->left) {
+                Node* temp = node->right;
+                delete node;
+                return temp;
+            }
+            if (!node->right) {
+                Node* temp = node->left;
+                delete node;
+                return temp;
+            }
+            Node* temp = findMin(node->right);
+            node->data = temp->data;
+            node->right = remove(node->right, temp->data);
         }
-        if (!root->right) {
-            Node* tmp = root->left;
-            delete root;
-            return tmp;
-        }
-        // Два нащадки — замінюємо мінімальним з правого піддерева
-        Node* minNode = findMin(root->right);
-        root->data = minNode->data;
-        root->right = deleteNode(root->right, minNode->data);
+        return node;
     }
-    return root;
-}
 
-void inorder(Node* root) {
-    if (!root) return;
-    inorder(root->left);
-    cout << root->data << " ";
-    inorder(root->right);
-}
+    void inorder(Node* node) {
+        if (!node) return;
+        inorder(node->left);
+        cout << node->data << " ";
+        inorder(node->right);
+    }
 
-void preorder(Node* root) {
-    if (!root) return;
-    cout << root->data << " ";
-    preorder(root->left);
-    preorder(root->right);
-}
+    void preorder(Node* node) {
+        if (!node) return;
+        cout << node->data << " ";
+        preorder(node->left);
+        preorder(node->right);
+    }
 
-void postorder(Node* root) {
-    if (!root) return;
-    postorder(root->left);
-    postorder(root->right);
-    cout << root->data << " ";
-}
+    void postorder(Node* node) {
+        if (!node) return;
+        postorder(node->left);
+        postorder(node->right);
+        cout << node->data << " ";
+    }
 
-void freeTree(Node* root) {
-    if (!root) return;
-    freeTree(root->left);
-    freeTree(root->right);
-    delete root;
-}
+    void clear(Node* node) {
+        if (!node) return;
+        clear(node->left);
+        clear(node->right);
+        delete node;
+    }
+
+public:
+    BinarySearchTree() : root(nullptr) {}
+    ~BinarySearchTree() { clear(root); }
+
+    void insert(int val) { root = insert(root, val); }
+    bool search(int val) { return search(root, val); }
+    void remove(int val) { root = remove(root, val); }
+
+    void printInorder() { inorder(root); cout << endl; }
+    void printPreorder() { preorder(root); cout << endl; }
+    void printPostorder() { postorder(root); cout << endl; }
+};
 
 int main() {
-    SetConsoleOutputCP(1251);
-    SetConsoleCP(1251);
-
-    Node* root = nullptr;
+    BinarySearchTree bst;
     int values[] = { 50, 30, 70, 20, 40, 60, 80 };
-    for (int v : values)
-        root = insert(root, v);
 
-    cout << "=== Бінарне дерево пошуку (BST) ===\n";
-    cout << "Вставлено: 50 30 70 20 40 60 80\n\n";
+    for (int v : values) bst.insert(v);
 
-    cout << "Inorder (відсортовано):   ";
-    inorder(root);
-    cout << "\n";
+    cout << "BST Traversals:\n";
+    cout << "Inorder:   "; bst.printInorder();
+    cout << "Preorder:  "; bst.printPreorder();
+    cout << "Postorder: "; bst.printPostorder();
 
-    cout << "Preorder:                 ";
-    preorder(root);
-    cout << "\n";
+    cout << "\nSearch 40: " << (bst.search(40) ? "Found" : "Not Found") << endl;
+    cout << "Search 99: " << (bst.search(99) ? "Found" : "Not Found") << endl;
 
-    cout << "Postorder:                ";
-    postorder(root);
-    cout << "\n\n";
+    cout << "\nRemoving 30..." << endl;
+    bst.remove(30);
+    cout << "Inorder after remove: "; bst.printInorder();
 
-    cout << "Пошук 40: " << (search(root, 40) ? "знайдено" : "не знайдено") << "\n";
-    cout << "Пошук 99: " << (search(root, 99) ? "знайдено" : "не знайдено") << "\n\n";
-
-    root = deleteNode(root, 30);
-    cout << "Після видалення 30:\n";
-    cout << "Inorder: ";
-    inorder(root);
-    cout << "\n";
-
-    freeTree(root);
     return 0;
 }
